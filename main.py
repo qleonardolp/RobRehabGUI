@@ -19,6 +19,7 @@ import math
 
 from definitions import *
 import ipclient
+import btclient
 
 from kivy.uix.label import Label
 from kivy.properties import ListProperty
@@ -114,6 +115,7 @@ class RobRehabGUI( Widget ):
     serverType, serverHost = serverAddress.split( '://' )
     print( 'acquired %s server host: %s' % ( serverType, serverHost ) )
     if serverType == 'ip': self.connection = ipclient.Connection()
+    if serverType == 'bt': self.connection = btclient.Connection()
     if self.connection is not None:
       self.configStorage.put( 'server', address=serverAddress )
       self.connection.Connect( serverHost )

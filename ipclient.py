@@ -56,9 +56,9 @@ class Connection:
       messageBuffer = bytearray( [ 0 ] )
       try:
         self.eventSocket.sendall( messageBuffer )
-        robotsInfoString = self.eventSocket.recv( BUFFER_SIZE )
-        print( 'RefreshInfo: received JSON string: ' + str(robotsInfoString, 'utf-8').strip( '\0' ) )
-        robotsInfo = json.loads( str(robotsInfoString, 'utf-8').strip( '\0' ) )
+        robotInfoString = self.eventSocket.recv( BUFFER_SIZE )
+        print( 'RefreshInfo: received JSON string: ' + str(robotInfoString, 'utf-8').strip( '\0' ) )
+        robotsInfo = json.loads( str(robotInfoString, 'utf-8').strip( '\0' ) )
       except:
         print( sys.exc_info() )
         robotsInfo = {}
@@ -88,12 +88,12 @@ class Connection:
         print( sys.exc_info() )
 
   def CheckState( self, eventNumber ):
-    return false
+    return False
     #return self.eventSocket.recv( BUFFER_SIZE )
 
-  def _SendSetpoints( self, dataSocket, deviceIndex, setpoints ):
+  def _SendSetpoints( self, dataSocket, coordinateIndex, setpoints ):
     if self.isConnected:
-      struct.pack_into( 'BB', self.setpointBuffer, 0, 1, deviceIndex )
+      struct.pack_into( 'BB', self.setpointBuffer, 0, 1, coordinateIndex )
       for setpointIndex in range( len(setpoints) ):
         setpointOffset = 2 + setpointIndex * FLOAT_SIZE
         struct.pack_into( 'f', self.setpointBuffer, setpointOffset, setpoints[ setpointIndex ] )
@@ -107,15 +107,15 @@ class Connection:
   def SendAxisSetpoints( self, axisIndex, setpoints ):
     self._SendSetpoints( self.axisSocket, axisIndex, setpoints )
 
-  def _ReceiveMeasures( self, dataSocket, deviceIndex, measures ):
+  def _ReceiveMeasures( self, dataSocket, coordinateIndex, measures ):
     if self.isConnected:
       try:
         messageBuffer = dataSocket.recv( BUFFER_SIZE )
-        devicesNumber = int( messageBuffer[ 0 ] )
+        coordinatesNumber = int( messageBuffer[ 0 ] )
         #print( '_ReceiveMeasures: received message buffer: ' + str( list( messageBuffer ) ) )
-        for deviceCount in range( devicesNumber ):
-          dataOffset = deviceCount * len(measures) * FLOAT_SIZE + 1
-          if int( messageBuffer[ dataOffset ] ) == deviceIndex:
+        for coordinate in range( coordinatesNumber ):
+          dataOffset = coordinate * len(measures) * FLOAT_SIZE + 1
+          if int( messageBuffer[ dataOffset ] ) == coordinateIndex:
             for measureIndex in range( len(measures) ):
               measureOffset = dataOffset + measureIndex * FLOAT_SIZE + 1
               measures[ measureIndex ] = struct.unpack_from( 'f', messageBuffer, measureOffset )[ 0 ]
